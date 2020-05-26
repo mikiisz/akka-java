@@ -5,5 +5,5 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @JsonSerialize(as = ImmutableNoPrices.class)
-public interface NoPrices extends Product {
+public interface NoPrices extends Product, Quantity {
 }

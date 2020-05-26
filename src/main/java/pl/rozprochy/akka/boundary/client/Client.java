@@ -22,8 +22,8 @@ public class Client extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(String.class, product -> server.tell(ImmutablePriceQuery.builder().name(product).build(), getSelf()))
-                .match(PriceResponse.class, pr -> log.info("Price of `{}` is {}", pr.name(), pr.price()))
-                .match(NoPrices.class, np -> log.info("No prices available for product `{}`", np.name()))
+                .match(PriceResponse.class, pr -> log.info("Price of `{}` is {}. Has been asked {} times", pr.name(), pr.price(), pr.quantity()))
+                .match(NoPrices.class, np -> log.info("No prices available for product `{}`. Has been asked {} times", np.name(), np.quantity()))
                 .build();
     }
 

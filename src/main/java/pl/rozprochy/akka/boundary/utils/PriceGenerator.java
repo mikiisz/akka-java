@@ -1,9 +1,9 @@
-package pl.rozprochy.akka.boundary.server;
+package pl.rozprochy.akka.boundary.utils;
 
 import akka.actor.AbstractActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import pl.rozprochy.akka.model.ImmutablePriceResponse;
+import pl.rozprochy.akka.model.ImmutableInternalPriceResponse;
 import pl.rozprochy.akka.model.InternalPriceQuery;
 
 import java.util.Random;
@@ -20,7 +20,7 @@ public class PriceGenerator extends AbstractActor {
                     Thread.sleep(rand.nextInt(400) + 100);
                     final int price = rand.nextInt(10) + 1;
                     log.debug("Generator priced `{}` as {}", priceQuery.name(), price);
-                    getSender().tell(ImmutablePriceResponse.builder().name(priceQuery.name()).price(price).build(), getSelf());
+                    getSender().tell(ImmutableInternalPriceResponse.builder().name(priceQuery.name()).price(price).build(), getSelf());
                     context().stop(self());
                 })
                 .build();
