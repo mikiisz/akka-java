@@ -36,18 +36,19 @@ public class ServerHandler extends AbstractActor {
                     log.debug("Received a query");
                     final CompletableFuture<Object> q1 = ask(context().actorOf(Props.create(PriceGenerator.class)), priceQuery, timeout).toCompletableFuture();
                     final CompletableFuture<Object> q2 = ask(context().actorOf(Props.create(PriceGenerator.class)), priceQuery, timeout).toCompletableFuture();
-                    final CompletableFuture<Object> q = ask(context().actorOf(DBHandler.props(dbStatement)), ImmutablePriceQuery.builder().name(priceQuery.name()).build(), timeout).toCompletableFuture();
-                    final AtomicInteger respondValue = new AtomicInteger(-1);
-                    final AtomicReference<QueryQuantity> query = new AtomicReference<>();
+                    final CompletableFuture<Object> q3 = ask(context().actorOf(DBHandler.props(dbStatement)), ImmutablePriceQuery.builder().name(priceQuery.name()).build(), timeout).toCompletableFuture();
 
-                    q.whenComplete((res, err) -> {
+                    final AtomicInteger respondValue = new AtomicInteger(-1);
+                    final AtomicReference<QueryQuantity> query = new AtomicReference<>(ImmutableQueryQuantity.builder().name(priceQuery.name()).quantity(-1).build());
+
+                    q3.whenComplete((res, err) -> {
                         if (Optional.ofNullable(err).isEmpty()) {
                             final QueryQuantity result = (QueryQuantity) res;
                             query.set(result);
                         }
                     });
 
-                    Stream.of(q1, q2, q).forEach(future -> future.whenComplete((res, err) -> {
+                    Stream.of(q1, q2, q3).forEach(future -> future.whenComplete((res, err) -> {
                         if (Optional.ofNullable(err).isEmpty()) {
                             final InternalPriceResponse result = (InternalPriceResponse) res;
                             if (respondValue.get() > 0) {

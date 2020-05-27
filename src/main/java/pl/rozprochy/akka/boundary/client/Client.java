@@ -22,8 +22,20 @@ public class Client extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(String.class, product -> server.tell(ImmutablePriceQuery.builder().name(product).build(), getSelf()))
-                .match(PriceResponse.class, pr -> log.info("Price of `{}` is {}. Has been asked {} times", pr.name(), pr.price(), pr.quantity()))
-                .match(NoPrices.class, np -> log.info("No prices available for product `{}`. Has been asked {} times", np.name(), np.quantity()))
+                .match(PriceResponse.class, pr -> {
+                    if (pr.quantity() > 0) {
+                        log.info("Price of `{}` is {}. Has been asked {} times", pr.name(), pr.price(), pr.quantity());
+                    } else {
+                        log.info("Price of `{}` is {}. Response from database took longer than 300 mills - aborted", pr.name(), pr.price());
+                    }
+                })
+                .match(NoPrices.class, np -> {
+                    if (np.quantity() > 0) {
+                        log.info("No prices available for product `{}`. Has been asked {} times", np.name(), np.quantity());
+                    } else {
+                        log.info("No prices available for product `{}`. Response from database took longer than 300 mills - aborted", np.name());
+                    }
+                })
                 .build();
     }
 
