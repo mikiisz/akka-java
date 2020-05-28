@@ -2,7 +2,7 @@ package pl.rozprochy.akka.boundary.utils;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
-import pl.rozprochy.akka.model.ImmutableQueryQuantity;
+import pl.rozprochy.akka.model.ImmutableQuantityQuery;
 import pl.rozprochy.akka.model.PriceQuery;
 
 import java.sql.ResultSet;
@@ -10,12 +10,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.OptionalInt;
 
-public class DBHandler extends AbstractActor {
+public class DBClient extends AbstractActor {
 
     private final static String QUANTITY = "quantity";
     private final Statement dbStatement;
 
-    public DBHandler(Statement dbStatement) {
+    public DBClient(Statement dbStatement) {
         this.dbStatement = dbStatement;
     }
 
@@ -59,10 +59,10 @@ public class DBHandler extends AbstractActor {
                     final OptionalInt q = getQuantity(query.name());
                     if (q.isPresent()) {
                         updateQuantity(query.name());
-                        getSender().tell(ImmutableQueryQuantity.builder().name(query.name()).quantity(q.getAsInt()).build(), getSelf());
+                        getSender().tell(ImmutableQuantityQuery.builder().name(query.name()).quantity(q.getAsInt()).build(), getSelf());
                     } else {
                         insertQuantity(query.name());
-                        getSender().tell(ImmutableQueryQuantity.builder().name(query.name()).quantity(0).build(), getSelf());
+                        getSender().tell(ImmutableQuantityQuery.builder().name(query.name()).quantity(0).build(), getSelf());
                     }
                     context().stop(self());
                 })
@@ -70,7 +70,7 @@ public class DBHandler extends AbstractActor {
     }
 
     public static Props props(Statement dbStatement) {
-        return Props.create(DBHandler.class, dbStatement);
+        return Props.create(DBClient.class, dbStatement);
     }
 
     private static String buildGetQuery(String name) {

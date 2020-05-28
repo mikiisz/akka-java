@@ -1,11 +1,9 @@
-package pl.rozprochy.akka.boundary.server;
+package pl.rozprochy.akka.boundary.utils;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import pl.rozprochy.akka.boundary.utils.DBHandler;
-import pl.rozprochy.akka.boundary.utils.PriceGenerator;
 import pl.rozprochy.akka.model.*;
 
 import java.sql.Statement;
@@ -19,13 +17,13 @@ import java.util.stream.Stream;
 import static akka.pattern.Patterns.ask;
 import static java.time.temporal.ChronoUnit.MILLIS;
 
-public class ServerHandler extends AbstractActor {
+public class QueryHandler extends AbstractActor {
 
     private final Duration timeout = Duration.of(300, MILLIS);
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
     private final Statement dbStatement;
 
-    public ServerHandler(Statement dbStatement) {
+    public QueryHandler(Statement dbStatement) {
         this.dbStatement = dbStatement;
     }
 
@@ -34,16 +32,16 @@ public class ServerHandler extends AbstractActor {
         return receiveBuilder()
                 .match(InternalPriceQuery.class, priceQuery -> {
                     log.debug("Received a query");
-                    final CompletableFuture<Object> q1 = ask(context().actorOf(Props.create(PriceGenerator.class)), priceQuery, timeout).toCompletableFuture();
-                    final CompletableFuture<Object> q2 = ask(context().actorOf(Props.create(PriceGenerator.class)), priceQuery, timeout).toCompletableFuture();
-                    final CompletableFuture<Object> q3 = ask(context().actorOf(DBHandler.props(dbStatement)), ImmutablePriceQuery.builder().name(priceQuery.name()).build(), timeout).toCompletableFuture();
+                    final CompletableFuture<Object> q1 = ask(context().actorOf(Props.create(PricingClient.class)), priceQuery, timeout).toCompletableFuture();
+                    final CompletableFuture<Object> q2 = ask(context().actorOf(Props.create(PricingClient.class)), priceQuery, timeout).toCompletableFuture();
+                    final CompletableFuture<Object> q3 = ask(context().actorOf(DBClient.props(dbStatement)), ImmutablePriceQuery.builder().name(priceQuery.name()).build(), timeout).toCompletableFuture();
 
                     final AtomicInteger respondValue = new AtomicInteger(-1);
-                    final AtomicReference<QueryQuantity> query = new AtomicReference<>(ImmutableQueryQuantity.builder().name(priceQuery.name()).quantity(-1).build());
+                    final AtomicReference<QuantityQuery> query = new AtomicReference<>(ImmutableQuantityQuery.builder().name(priceQuery.name()).quantity(-1).build());
 
                     q3.whenComplete((res, err) -> {
                         if (Optional.ofNullable(err).isEmpty()) {
-                            final QueryQuantity result = (QueryQuantity) res;
+                            final QuantityQuery result = (QuantityQuery) res;
                             query.set(result);
                         }
                     });

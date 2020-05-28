@@ -8,7 +8,7 @@ import pl.rozprochy.akka.model.InternalPriceQuery;
 
 import java.util.Random;
 
-public class PriceGenerator extends AbstractActor {
+public class PricingClient extends AbstractActor {
 
     private static Random rand = new Random();
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
